@@ -1,0 +1,158 @@
+---
+description: Documentation generation standards for WoS Bot project
+alwaysApply: false
+---
+# WoS Bot Documentation Standards
+
+@context {
+  "expertise": "Senior Java developer with comprehensive documentation experience",
+  "project": "WoS Bot - JavaFX desktop automation bot",
+  "frameworks": ["JavaFX", "Hibernate ORM", "Maven", "Tess4j", "OpenCV", "ddmlib"],
+  "output_format": "Javadoc and Markdown",
+  "project_docs": "See agents/ directory for comprehensive project documentation",
+  "version": "2025.1.0"
+}
+
+## Documentation Standards
+
+@javadoc_requirements {
+  "method_documentation": {
+    "summary": "Provide concise summary for each function, class, or module",
+    "parameters": "Document each parameter including data type, role, and default values",
+    "return_value": "Specify return type and describe what is returned, including null cases",
+    "exceptions": "List exceptions that may be thrown and under what circumstances",
+    "examples": "For complex functions, provide usage examples and edge cases"
+  },
+  "class_documentation": {
+    "scope": "Focus on purpose and functionality",
+    "exclusions": ["class_dependencies", "@see_tags"],
+    "requirements": ["concise_summary", "usage_context"]
+  }
+}
+
+## Javadoc Format Template
+
+@javadoc_template {
+  "format": "/**\n * [Description of the method's purpose and functionality.]\n *\n * @param [parameterName] [description of parameter and its role]\n * @param [parameterName] [description of parameter and its role]\n * @return [description of what is returned, and when null or optional value is expected]\n * @throws [ExceptionType] [condition under which this exception is thrown]\n * @throws [ExceptionType] [condition under which this exception is thrown]\n * @author [Your Name]\n */",
+  "output_format": "Markdown for easy copy-pasting"
+}
+
+## Documentation Rules
+
+@documentation_rules [
+  {
+    "rule": "method_purpose",
+    "description": "Every public method must have a clear purpose description",
+    "enforcement": "mandatory"
+  },
+  {
+    "rule": "parameter_documentation",
+    "description": "All parameters must be documented with type and purpose",
+    "format": "@param paramName description including data type and role",
+    "enforcement": "mandatory"
+  },
+  {
+    "rule": "return_documentation", 
+    "description": "Return values must be documented including null/optional cases",
+    "format": "@return description of return value and null conditions",
+    "enforcement": "mandatory"
+  },
+  {
+    "rule": "exception_documentation",
+    "description": "All thrown exceptions must be documented with conditions",
+    "format": "@throws ExceptionType condition when thrown",
+    "enforcement": "mandatory"
+  },
+  {
+    "rule": "complex_method_examples",
+    "description": "Complex methods require usage examples and edge case discussion",
+    "enforcement": "recommended"
+  }
+]
+
+## WoS Bot Specific Documentation
+
+@project_documentation {
+  "task_classes": {
+    "required": ["task_purpose", "configuration_keys", "helper_usage", "rescheduling_strategy", "screen_location"],
+    "example": "Document task type, required start location, stamina consumption, configuration keys used"
+  },
+  "helper_classes": {
+    "required": ["helper_purpose", "key_methods", "usage_examples", "integration_with_tasks"],
+    "focus": "How helpers assist tasks, common usage patterns"
+  },
+  "service_methods": {
+    "required": ["service_purpose", "singleton_access", "key_methods", "thread_safety"],
+    "focus": "Service responsibilities, access patterns, thread safety considerations"
+  },
+  "emulator_classes": {
+    "required": ["emulator_type", "adb_operations", "device_serial_format", "launch_close_methods"],
+    "focus": "Emulator-specific implementation details, ADB interaction patterns"
+  },
+  "repository_methods": {
+    "required": ["query_purpose", "parameters", "return_format", "entity_relationships"],
+    "hql_queries": "Document complex HQL queries with parameter explanations"
+  },
+  "javafx_controllers": {
+    "required": ["controller_purpose", "fxml_binding", "event_handlers", "service_interaction"],
+    "focus": "UI component management, user interaction handling"
+  }
+}
+
+## Output Requirements
+
+@output_specifications {
+  "format": "Markdown code blocks for easy copy-pasting",
+  "structure": "Method signature followed by complete Javadoc",
+  "completeness": "Include all required tags (@param, @return, @throws, @author)",
+  "clarity": "Use clear, technical language without ambiguity"
+}
+
+## Documentation Examples
+
+@examples {
+  "task_method": "/**\n * Executes the arena battle task.\n * Navigates to arena, selects opponent, performs battle, and reschedules.\n *\n * <p>Configuration keys used:\n * <ul>\n * <li>ARENA_TASK_BOOL - Enable/disable task</li>\n * <li>ARENA_TASK_EXTRA_ATTEMPTS_INT - Additional attempts to use</li>\n * <li>ARENA_TASK_ACTIVATION_TIME_STRING - Time to activate task</li>\n * </ul>\n *\n * <p>This task:\n * <ul>\n * <li>Requires HOME screen location</li>\n * <li>Consumes stamina (20 per battle)</li>\n * <li>Reschedules for next day at activation time</li>\n * </ul>\n */",
+  "helper_method": "/**\n * Navigates to the specified game screen.\n *\n * @param screenName the name of the screen to navigate to (e.g., \"AllianceScreen\", \"IntelScreen\")\n * @throws HomeNotFoundException if navigation fails and home screen cannot be found\n * @throws InterruptedException if thread is interrupted during navigation\n */",
+  "service_method": "/**\n * Gets all profiles with their configurations.\n *\n * @return List of DTOProfiles, each containing profile data and associated configurations.\n *         Returns empty list if no profiles exist (default profile will be created).\n */",
+  "emulator_method": "/**\n * Captures a screenshot from the emulator.\n *\n * @param emulatorNumber the emulator instance number (e.g., \"0\", \"1\")\n * @return DTORawImage containing pixel data, width, height, and bits per pixel.\n *         Screenshot is cached for performance.\n * @throws RuntimeException if screenshot capture fails or times out\n */",
+  "repository_method": "/**\n * Gets a profile with all its configurations by ID.\n *\n * @param id the profile ID (Long, must not be null)\n * @return DTOProfiles with configurations if found, null if profile doesn't exist\n */"
+}
+
+## Best Practices
+
+@best_practices [
+  {
+    "practice": "concise_descriptions",
+    "description": "Write clear, concise descriptions without redundant information"
+  },
+  {
+    "practice": "parameter_details",
+    "description": "Include data types, constraints, and default values for parameters"
+  },
+  {
+    "practice": "null_handling",
+    "description": "Always document when methods can return null or Optional"
+  },
+  {
+    "practice": "exception_conditions", 
+    "description": "Clearly state the conditions that trigger each exception"
+  },
+  {
+    "practice": "business_context",
+    "description": "For service methods, explain the business logic and impact"
+  }
+]
+
+## Generation Instructions
+
+When generating documentation:
+
+1. **Analyze Method**: Understand the method's purpose, parameters, return type, and potential exceptions
+2. **Write Summary**: Create a clear description of what the method does, include context (task, helper, service, etc.)
+3. **Document Parameters**: List each parameter with type, purpose, constraints, and examples (e.g., emulatorNumber format)
+4. **Describe Return**: Explain what is returned, when null/empty values are possible, and return value structure
+5. **List Exceptions**: Document all checked and significant unchecked exceptions (ADBConnectionException, HomeNotFoundException, etc.)
+6. **Add Context**: For tasks, document configuration keys, helper usage, rescheduling strategy
+7. **Add Examples**: For complex methods, provide usage examples with actual project patterns
+8. **Reference Project Docs**: Link to agents/ documentation when relevant (e.g., "See agents/04-task-system.md")
+9. **Output Format**: Present as Javadoc format, can be copied directly into code

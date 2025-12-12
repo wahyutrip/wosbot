@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug WosBot",
+            "request": "launch",
+            "mainClass": "cl.camodev.wosbot.main.Main",
+            "projectName": "wos-hmi",
+            "args": "",
+            "vmArgs": "-Dfile.encoding=UTF-8",
+            "console": "internalConsole",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "java",
+            "name": "Debug WosBot (Current File)",
+            "request": "launch",
+            "mainClass": "${file}"
+        }
+    ]
+}

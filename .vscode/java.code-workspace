@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "path": ".."
+    }
+  ],
+  "settings": {
+    "java.configuration.maven.userSettings": "",
+    "maven.terminal.useJavaHome": true,
+    "maven.executable.path": "",
+    "java.import.gradle.enabled": false,
+    "java.autobuild.enabled": true
+  }
+}

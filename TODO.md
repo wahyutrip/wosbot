@@ -1,0 +1,18 @@
+city events : 
+	- buy weekly scroll inside and depends on claim life essence
+- extra city
+	- split store house and stamina
+	- relayout trek supplies
+	- relayout daily labyrinth
+	- put buy monthly vip inside claim vip
+- beast slay
+- gathering
+	- extra gather
+- Alliance Shop
+	- fix order and discount percentage
+- BT Review
+- Training
+	- Relayout
+	- troop level specific	
+- top up center
+- deals

@@ -1,0 +1,554 @@
+---
+description: Memory management standards for WoS Bot - OCR, ADB, and automation operations
+alwaysApply: false
+---
+# WoS Bot Memory Management and JVM Optimization Standards
+
+You are an expert Java developer with deep understanding of JVM internals, garbage collection, and Java memory management. Apply these comprehensive guidelines to prevent memory leaks, optimize JVM performance, and ensure efficient memory utilization in the WoS Bot automation application.
+
+@context {
+  "project": "WoS Bot - JavaFX desktop automation bot",
+  "memory_intensive_operations": ["OCR processing", "Screenshot capture", "Image processing", "ADB operations"],
+  "caching_strategies": ["Screenshot caching", "Device instance caching", "OCR settings reuse"],
+  "version": "2025.1.0"
+}
+
+## Core Java Memory Management Principles
+
+### 1. JVM Memory Areas and Management
+
+#### Heap Memory Structure
+```java
+// Understanding heap generations
+// Young Generation: Eden + Survivor Spaces (S0, S1)
+// Old Generation: Tenured Space
+// Metaspace: Class metadata (Java 8+)
+
+// JVM tuning parameters
+// -Xmx4g -Xms2g                    // Heap size
+// -XX:NewRatio=3                   // Old/Young generation ratio
+// -XX:MaxMetaspaceSize=256m        // Metaspace limit
+// -XX:MaxDirectMemorySize=1g       // Direct memory limit
+```
+
+#### Garbage Collection Algorithms
+```java
+// G1 GC (recommended for most applications)
+// -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:G1HeapRegionSize=16m
+
+// ZGC (ultra-low latency, Java 11+)
+// -XX:+UseZGC -XX:+UseLargePages
+
+// Parallel GC (high throughput)
+// -XX:+UseParallelGC -XX:ParallelGCThreads=8
+
+// GC monitoring
+// -XX:+PrintGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps
+// -Xloggc:gc.log -XX:+UseGCLogFileRotation
+```
+
+### 2. Resource Management Patterns
+
+#### Try-with-resources Implementation
+```java
+// Proper resource management
+try (FileInputStream fis = new FileInputStream("data.txt");
+     BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+     Connection conn = DriverManager.getConnection(url)) {
+    
+    // Use resources
+    String line = reader.readLine();
+    PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users");
+    
+} catch (Exception e) {
+    log.error("Resource error", e);
+} // Automatic cleanup in reverse order
+
+// Custom AutoCloseable resources
+public class ManagedResource implements AutoCloseable {
+    private final Resource resource;
+    private volatile boolean closed = false;
+    
+    public ManagedResource(Resource resource) {
+        this.resource = resource;
+    }
+    
+    @Override
+    public void close() throws Exception {
+        if (!closed) {
+            try {
+                resource.cleanup();
+            } finally {
+                closed = true;
+            }
+        }
+    }
+    
+    public void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("Resource is closed");
+        }
+    }
+}
+```
+
+### 3. Object Lifecycle and Reference Management
+
+#### Reference Types and Usage
+```java
+// Strong reference (default)
+List<String> strongRef = new ArrayList<>();
+
+// Weak reference for caches
+public class CacheManager {
+    private final Map<String, WeakReference<ExpensiveObject>> cache = 
+        new ConcurrentHashMap<>();
+    
+    public ExpensiveObject get(String key) {
+        WeakReference<ExpensiveObject> ref = cache.get(key);
+        if (ref != null) {
+            ExpensiveObject obj = ref.get();
+            if (obj != null) {
+                return obj;
+            } else {
+                cache.remove(key); // Clean up dead reference
+            }
+        }
+        
+        ExpensiveObject newObj = createExpensiveObject(key);
+        cache.put(key, new WeakReference<>(newObj));
+        return newObj;
+    }
+}
+
+// Soft reference for memory-sensitive caches
+public class MemorySensitiveCache<K, V> {
+    private final Map<K, SoftReference<V>> cache = new ConcurrentHashMap<>();
+    
+    public V get(K key) {
+        SoftReference<V> ref = cache.get(key);
+        if (ref != null) {
+            V value = ref.get();
+            if (value != null) {
+                return value;
+            } else {
+                cache.remove(key);
+            }
+        }
+        return null;
+    }
+    
+    public void put(K key, V value) {
+        cache.put(key, new SoftReference<>(value));
+    }
+}
+
+// Phantom reference for cleanup notifications
+public class ResourceCleanupManager {
+    private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
+    private final Set<PhantomReference<Object>> phantomRefs = ConcurrentHashMap.newKeySet();
+    
+    public void registerForCleanup(Object obj, Runnable cleanupAction) {
+        PhantomReference<Object> ref = new PhantomReference<Object>(obj, queue) {
+            @Override
+            public void clear() {
+                cleanupAction.run();
+                super.clear();
+            }
+        };
+        phantomRefs.add(ref);
+    }
+}
+```
+
+### 4. Collection Optimization and Memory Efficiency
+
+#### Collection Type Selection
+```java
+// ArrayList vs LinkedList
+List<String> randomAccess = new ArrayList<>(1000);     // O(1) access, O(n) insertion
+List<String> frequentInserts = new LinkedList<>();     // O(1) insertion, O(n) access
+
+// HashMap vs TreeMap vs LinkedHashMap
+Map<String, Object> fastLookup = new HashMap<>(16);           // O(1) access
+Map<String, Object> sortedMap = new TreeMap<>();              // O(log n) access, sorted
+Map<String, Object> insertionOrder = new LinkedHashMap<>();   // Maintains insertion order
+
+// HashSet vs TreeSet vs LinkedHashSet
+Set<String> fastMembership = new HashSet<>(16);        // O(1) membership
+Set<String> sortedSet = new TreeSet<>();               // O(log n) membership, sorted
+Set<String> orderPreserving = new LinkedHashSet<>();   // Maintains insertion order
+
+// Initial capacity optimization
+List<User> users = new ArrayList<>(expectedSize);      // Avoid resize operations
+Map<String, Object> config = new HashMap<>(expectedSize * 4 / 3); // Load factor consideration
+Set<String> uniqueIds = new HashSet<>(expectedSize * 4 / 3);
+```
+
+#### Primitive Collections for Performance
+```java
+// Using Eclipse Collections for primitive optimization
+import org.eclipse.collections.api.list.primitive.IntList;
+import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
+
+// Memory efficient primitive collections
+IntList numbers = new IntArrayList(1000);  // No boxing overhead
+numbers.add(42);                           // Direct primitive storage
+
+// Avoiding autoboxing in collections
+List<Integer> boxedNumbers = new ArrayList<>();
+boxedNumbers.add(42);  // Boxing: int -> Integer (memory overhead)
+
+// Use primitive collections instead
+IntList primitiveNumbers = new IntArrayList();
+primitiveNumbers.add(42);  // No boxing, better memory efficiency
+```
+
+#### Concurrent Collections
+```java
+// Thread-safe collections
+Map<String, Object> concurrentMap = new ConcurrentHashMap<>(16, 0.75f, 8);
+List<String> copyOnWriteList = new CopyOnWriteArrayList<>();  // Read-heavy scenarios
+Set<String> concurrentSet = ConcurrentHashMap.newKeySet();
+
+// Custom concurrent collection with memory optimization
+public class MemoryEfficientConcurrentCache<K, V> {
+    private final ConcurrentHashMap<K, V> map;
+    private final int maxSize;
+    
+    public MemoryEfficientConcurrentCache(int maxSize) {
+        this.maxSize = maxSize;
+        this.map = new ConcurrentHashMap<>(maxSize * 4 / 3);
+    }
+    
+    public V put(K key, V value) {
+        if (map.size() >= maxSize) {
+            // LRU eviction logic
+            evictOldestEntry();
+        }
+        return map.put(key, value);
+    }
+}
+```
+
+### 5. String Management and Optimization
+
+#### String Operations
+```java
+// Efficient string concatenation
+StringBuilder sb = new StringBuilder(estimatedLength);
+for (String part : parts) {
+    sb.append(part).append(" ");
+}
+String result = sb.toString();
+
+// String interning considerations
+String literal = "constant";           // Automatically interned
+String dynamic = new String("test");   // Not interned
+String interned = dynamic.intern();    // Explicitly interned
+
+// Text blocks for multiline strings (Java 13+)
+String json = """
+    {
+        "name": "%s",
+        "age": %d,
+        "active": %b
+    }
+    """.formatted(name, age, active);
+
+// String deduplication (available in some JVMs)
+// -XX:+UseStringDeduplication (with G1GC)
+```
+
+#### String Pool Management
+```java
+// Managing string pool memory
+public class StringPoolManager {
+    // Avoid excessive string interning
+    public String processUserInput(String input) {
+        // Don't intern user input strings
+        if (isValidConstant(input)) {
+            return input.intern();  // Only intern known constants
+        }
+        return input;
+    }
+    
+    // Use string caching for frequently used values
+    private final Map<String, String> frequentStrings = new HashMap<>();
+    
+    public String getCachedString(String value) {
+        return frequentStrings.computeIfAbsent(value, k -> k);
+    }
+}
+```
+
+### 6. Stream API Memory Management
+
+#### Memory-Efficient Stream Operations
+```java
+// Limit stream operations for memory control
+List<Result> results = largeDataset.stream()
+    .filter(this::isValid)
+    .limit(1000)                    // Prevent excessive memory usage
+    .map(this::transform)
+    .collect(Collectors.toList());
+
+// Use parallel streams judiciously
+List<ProcessedData> processed = hugeDataset.parallelStream()
+    .filter(data -> data.getSize() > threshold)
+    .map(this::processExpensiveOperation)
+    .collect(Collectors.toList());
+
+// Memory-efficient collectors
+Map<String, List<User>> usersByDepartment = users.stream()
+    .collect(Collectors.groupingBy(
+        User::getDepartment,
+        HashMap::new,                // Custom map factory
+        Collectors.toCollection(ArrayList::new)  // Custom collection factory
+    ));
+
+// Lazy evaluation with custom collectors
+Collector<String, ?, Stream<String>> lazyCollector = 
+    Collector.of(
+        ArrayList::new,
+        List::add,
+        (list1, list2) -> { list1.addAll(list2); return list1; },
+        List::stream
+    );
+```
+
+### 7. WoS Bot Specific Memory Patterns
+
+#### Screenshot and Image Caching
+```java
+// Screenshot caching per emulator (in Emulator class)
+private final ConcurrentHashMap<String, DTORawImage> lastScreenshotCache = 
+    new ConcurrentHashMap<>();
+
+public DTORawImage captureScreenshot(String emulatorNumber) {
+    // Check cache first
+    DTORawImage cached = lastScreenshotCache.get(emulatorNumber);
+    if (cached != null && isCacheValid(cached)) {
+        return cached;
+    }
+    
+    // Capture new screenshot
+    DTORawImage screenshot = performCapture(emulatorNumber);
+    
+    // Update cache (limit cache size to prevent memory growth)
+    if (lastScreenshotCache.size() > MAX_CACHED_SCREENSHOTS) {
+        evictOldestScreenshot();
+    }
+    lastScreenshotCache.put(emulatorNumber, screenshot);
+    
+    return screenshot;
+}
+
+// Limit cache size to prevent unbounded growth
+private static final int MAX_CACHED_SCREENSHOTS = 10;
+```
+
+#### OCR Settings Reuse
+```java
+// Reuse OCR settings objects (CommonOCRSettings)
+public class CommonOCRSettings {
+    public static final DTOTesseractSettings SINGLE_LINE = createSingleLineSettings();
+    public static final DTOTesseractSettings MULTI_LINE = createMultiLineSettings();
+    
+    // Reuse instances instead of creating new ones
+}
+
+// In tasks, reuse settings
+DTOTesseractSettings settings = CommonOCRSettings.SINGLE_LINE;
+String text = provider.ocrRegion(point1, point2, settings);
+```
+
+#### ADB Device Instance Caching
+```java
+// Cache ADB device instances with TTL (in Emulator class)
+private final ConcurrentHashMap<String, IDevice> deviceCache = 
+    new ConcurrentHashMap<>();
+private final ConcurrentHashMap<String, Long> deviceCacheTimestamp = 
+    new ConcurrentHashMap<>();
+private static final long DEVICE_CACHE_TTL = 30000; // 30 seconds
+
+protected IDevice findDevice(String emulatorNumber) {
+    IDevice cached = deviceCache.get(emulatorNumber);
+    Long timestamp = deviceCacheTimestamp.get(emulatorNumber);
+    
+    if (cached != null && timestamp != null) {
+        long age = System.currentTimeMillis() - timestamp;
+        if (age < DEVICE_CACHE_TTL) {
+            return cached;
+        }
+    }
+    
+    // Refresh cache
+    IDevice device = lookupDevice(emulatorNumber);
+    deviceCache.put(emulatorNumber, device);
+    deviceCacheTimestamp.put(emulatorNumber, System.currentTimeMillis());
+    
+    return device;
+}
+```
+
+#### Service Singleton Pattern
+```java
+// Services are singletons, manage resources carefully
+public class ServScheduler {
+    private static ServScheduler instance;
+    private final Map<String, TaskQueue> queues = new ConcurrentHashMap<>();
+    
+    public static ServScheduler getServices() {
+        if (instance == null) {
+            synchronized (ServScheduler.class) {
+                if (instance == null) {
+                    instance = new ServScheduler();
+                }
+            }
+        }
+        return instance;
+    }
+    
+    // Cleanup on shutdown
+    public void shutdown() {
+        queues.values().forEach(TaskQueue::stop);
+        queues.clear();
+    }
+}
+```
+
+### 8. ThreadLocal Memory Management
+
+#### Proper ThreadLocal Usage
+```java
+public class ThreadLocalManager {
+    private static final ThreadLocal<UserContext> userContext = new ThreadLocal<>();
+    private static final ThreadLocal<DateFormat> dateFormat = 
+        ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
+    
+    public static void setUserContext(UserContext context) {
+        userContext.set(context);
+    }
+    
+    public static UserContext getUserContext() {
+        return userContext.get();
+    }
+    
+    // Critical: Always clean up ThreadLocal
+    public static void clearUserContext() {
+        userContext.remove();
+    }
+    
+    public static void clearDateFormat() {
+        dateFormat.remove();
+    }
+    
+    // Use in web applications with filters
+    @Component
+    public class ThreadLocalCleanupFilter implements Filter {
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response, 
+                           FilterChain chain) throws IOException, ServletException {
+            try {
+                chain.doFilter(request, response);
+            } finally {
+                ThreadLocalManager.clearUserContext();
+                ThreadLocalManager.clearDateFormat();
+            }
+        }
+    }
+}
+```
+
+### 9. Memory Monitoring and Diagnostics
+
+#### JVM Memory Monitoring
+```java
+@Component
+public class MemoryMonitor {
+    private final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+    
+    @Scheduled(fixedRate = 60000) // Every minute
+    public void logMemoryUsage() {
+        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
+        MemoryUsage nonHeapUsage = memoryBean.getNonHeapMemoryUsage();
+        
+        log.info("Heap Memory: Used={}, Max={}, Usage={}%", 
+            heapUsage.getUsed() / 1024 / 1024,
+            heapUsage.getMax() / 1024 / 1024,
+            (heapUsage.getUsed() * 100.0) / heapUsage.getMax());
+        
+        log.info("Non-Heap Memory: Used={}, Max={}", 
+            nonHeapUsage.getUsed() / 1024 / 1024,
+            nonHeapUsage.getMax() / 1024 / 1024);
+        
+        // GC information
+        List<GarbageCollectorMXBean> gcBeans = ManagementFactory.getGarbageCollectorMXBeans();
+        for (GarbageCollectorMXBean gcBean : gcBeans) {
+            log.info("GC {}: Collections={}, Time={}ms", 
+                gcBean.getName(), gcBean.getCollectionCount(), gcBean.getCollectionTime());
+        }
+    }
+    
+    public MemoryUsageSnapshot takeSnapshot() {
+        Runtime runtime = Runtime.getRuntime();
+        return MemoryUsageSnapshot.builder()
+            .totalMemory(runtime.totalMemory())
+            .freeMemory(runtime.freeMemory())
+            .maxMemory(runtime.maxMemory())
+            .usedMemory(runtime.totalMemory() - runtime.freeMemory())
+            .timestamp(Instant.now())
+            .build();
+    }
+}
+```
+
+## Code Review Checklist for WoS Bot Memory Management
+
+### Critical Issues (🚨)
+- [ ] All AutoCloseable resources are properly closed with try-with-resources (ADB connections, OCR resources)
+- [ ] ThreadLocal variables are cleaned up to prevent memory leaks (ProfileLogger, user context)
+- [ ] Screenshot cache has size limits and eviction policy
+- [ ] ADB device cache has TTL and proper invalidation
+- [ ] OCR settings are reused (CommonOCRSettings) instead of creating new instances
+- [ ] Static collections are not growing unboundedly (caches, task queues)
+- [ ] Service singletons properly manage resources and cleanup on shutdown
+- [ ] Task queues are stopped and cleared when profiles are removed
+
+### Performance Issues (⚡)
+- [ ] Collections have appropriate initial capacity when size is known (task queues, profile lists)
+- [ ] Appropriate collection types chosen based on usage patterns (ConcurrentHashMap for caches)
+- [ ] StringBuilder used for string concatenation in loops (log messages, OCR text processing)
+- [ ] Screenshot pixel data handled efficiently (DTORawImage with proper byte array management)
+- [ ] OCR regions are precisely defined (smaller regions = less memory usage)
+- [ ] Image processing operations release resources properly (OpenCV Mat objects)
+- [ ] Stream operations use limit() for large datasets (task lists, log messages)
+- [ ] Parallel streams used judiciously (not recommended for OCR/ADB operations due to thread safety)
+
+### Best Practice Issues (🔧)
+- [ ] Proper GC algorithm chosen for application characteristics
+- [ ] JVM heap and memory parameters are tuned appropriately
+- [ ] Object pooling used for expensive object creation
+- [ ] String interning used only for constants, not user input
+- [ ] Memory monitoring and alerting implemented
+- [ ] Direct memory usage monitored for NIO applications
+
+## Implementation Guidelines for WoS Bot
+
+When generating Java code:
+1. Always use try-with-resources for AutoCloseable objects (ADB connections, file streams)
+2. Set appropriate initial capacity for collections when size is known (task queues, profile lists)
+3. Choose appropriate collection types based on access patterns (ConcurrentHashMap for caches)
+4. Implement proper ThreadLocal cleanup (ProfileLogger, user context in tasks)
+5. Limit cache sizes (screenshot cache, device cache) and implement eviction policies
+6. Reuse OCR settings objects (CommonOCRSettings) instead of creating new instances
+7. Cache screenshots per emulator but limit cache size and implement TTL
+8. Use StringBuilder for string concatenation operations (log messages, OCR text)
+9. Implement proper resource cleanup in service shutdown methods
+10. Monitor memory usage for OCR operations and screenshot processing
+11. Clean up task queues and caches when profiles are removed
+12. Use appropriate JVM tuning for desktop application (consider heap size for OCR operations)
+13. Handle large image data efficiently (DTORawImage pixel arrays)
+14. Implement proper cleanup for ADB bridge and device connections

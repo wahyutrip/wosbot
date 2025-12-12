@@ -1,0 +1,251 @@
+---
+description: Unit testing standards for WoS Bot project
+alwaysApply: false
+---
+# WoS Bot Unit Testing Standards
+
+@context {
+  "expertise": "Seasoned Java developer specializing in unit testing best practices",
+  "project": "WoS Bot - JavaFX desktop automation bot",
+  "framework_stack": ["JUnit", "Mockito", "AssertJ"],
+  "testing_approach": "Arrange-Act-Assert (AAA) pattern",
+  "coverage_focus": "Comprehensive scenario testing with >80% coverage",
+  "project_modules": ["wos-hmi", "wos-serv", "wos-persitence", "wos-utiles", "wos-ot"],
+  "version": "2025.1.0"
+}
+
+## Testing Principles
+
+@testing_principles [
+  {
+    "principle": "naming_consistency",
+    "pattern": "[methodTested_ConditionTested_ExpectedResult]",
+    "description": "Follow consistent naming pattern describing tested function and expected behavior"
+  },
+  {
+    "principle": "isolation",
+    "description": "Use mock objects or fakes to isolate the unit under test",
+    "tools": ["Mockito", "@Mock", "@InjectMocks"]
+  },
+  {
+    "principle": "aaa_pattern",
+    "description": "Apply Arrange-Act-Assert pattern for clear and organized tests",
+    "enforcement": "mandatory"
+  },
+  {
+    "principle": "comprehensive_assertions",
+    "description": "Use AssertJ assertions to verify expected outcomes including error and edge cases",
+    "library": "AssertJ"
+  },
+  {
+    "principle": "scenario_coverage",
+    "description": "Cover valid inputs, invalid inputs, edge cases, and boundary conditions"
+  }
+]
+
+## Testing Framework Requirements
+
+@framework_requirements {
+  "primary_framework": "JUnit 5",
+  "mocking_framework": "Mockito",
+  "assertion_library": "AssertJ",
+  "test_structure": "Unit tests in test/ directory matching src/ structure",
+  "coverage_target": ">80% coverage for business logic (tasks, services, helpers)"
+}
+
+## Test Coverage Scenarios
+
+@coverage_scenarios [
+  {
+    "scenario": "valid_inputs",
+    "description": "Test with various valid input combinations",
+    "priority": "high"
+  },
+  {
+    "scenario": "invalid_inputs",
+    "description": "Test with null, empty, and malformed inputs",
+    "priority": "high"
+  },
+  {
+    "scenario": "edge_cases",
+    "description": "Test boundary conditions and limit values",
+    "priority": "high"
+  },
+  {
+    "scenario": "boundary_conditions",
+    "description": "Test minimum, maximum, and threshold values",
+    "priority": "high"
+  },
+  {
+    "scenario": "exception_handling",
+    "description": "Mock exceptions and verify proper handling",
+    "priority": "mandatory"
+  },
+  {
+    "scenario": "dependency_interactions",
+    "description": "Verify interactions with mocked dependencies",
+    "priority": "mandatory"
+  }
+]
+
+## Testing Conventions
+
+@testing_conventions [
+  {
+    "convention": "mock_dependencies",
+    "description": "Mock related dependencies to return different scenarios",
+    "implementation": "Use @Mock annotations and Mockito.when() for setup"
+  },
+  {
+    "convention": "exception_verification",
+    "description": "Mock exceptions/errors and verify method handles situations appropriately",
+    "tools": ["Mockito.doThrow()", "AssertJ.assertThatThrownBy()"]
+  },
+  {
+    "convention": "interaction_verification",
+    "description": "Verify dependencies interaction using Mockito.verify()",
+    "scope": "All dependency method calls"
+  },
+  {
+    "convention": "assertion_library",
+    "description": "Use AssertJ for all assertions instead of JUnit assertions",
+    "preference": "AssertJ provides more readable and powerful assertions"
+  }
+]
+
+## Test Structure Template
+
+@test_structure {
+  "class_annotation": "@ExtendWith(MockitoExtension.class)",
+  "field_annotations": ["@Mock", "@InjectMocks"],
+  "method_structure": {
+    "arrange": "Set up test data, mock behaviors, prepare dependencies",
+    "act": "Execute the method under test",
+    "assert": "Verify results, interactions, and side effects"
+  }
+}
+
+## WoS Bot Testing Patterns
+
+@project_testing {
+  "task_testing": {
+    "annotation": "@ExtendWith(MockitoExtension.class)",
+    "focus": "Test task execution logic, rescheduling, configuration usage",
+    "mock_dependencies": "Mock EmulatorManager, helpers, profile, OCR providers",
+    "scenarios": ["successful_execution", "stamina_insufficient", "emulator_not_running", "ocr_failure", "rescheduling"]
+  },
+  "service_testing": {
+    "annotation": "@ExtendWith(MockitoExtension.class)",
+    "focus": "Test service methods (ServScheduler, ServProfiles, ServLogs, EmulatorManager)",
+    "mock_dependencies": "Mock repositories, emulators, task queues",
+    "singleton_pattern": "Test singleton access patterns, thread safety"
+  },
+  "helper_testing": {
+    "annotation": "@ExtendWith(MockitoExtension.class)",
+    "focus": "Test helper methods (NavigationHelper, StaminaHelper, etc.)",
+    "mock_dependencies": "Mock EmulatorManager, OCR providers, profile",
+    "scenarios": ["successful_operation", "failure_handling", "retry_logic"]
+  },
+  "repository_testing": {
+    "annotation": "@ExtendWith(MockitoExtension.class) or in-memory SQLite",
+    "focus": "Test repository methods, HQL queries, entity relationships",
+    "database": "Use in-memory SQLite for integration tests",
+    "query_testing": "Test custom HQL queries and entity methods"
+  },
+  "emulator_testing": {
+    "annotation": "@ExtendWith(MockitoExtension.class)",
+    "focus": "Test emulator operations (screenshot, tap, swipe, package detection)",
+    "mock_dependencies": "Mock ddmlib IDevice, AndroidDebugBridge",
+    "scenarios": ["successful_operation", "adb_failure", "device_not_found", "timeout"]
+  },
+  "javafx_testing": {
+    "annotation": "@ExtendWith(MockitoExtension.class)",
+    "focus": "Test JavaFX controllers, FXML binding, event handlers",
+    "mock_dependencies": "Mock services, use TestFX for UI testing if needed",
+    "note": "JavaFX requires JavaFX application thread, use Platform.runLater() for testing"
+  }
+}
+
+## Naming Convention Examples
+
+@naming_examples [
+  {
+    "method": "findUserById",
+    "condition": "ValidId",
+    "expected": "ReturnsUser",
+    "test_name": "findUserById_ValidId_ReturnsUser"
+  },
+  {
+    "method": "findUserById", 
+    "condition": "NullId",
+    "expected": "ThrowsIllegalArgumentException",
+    "test_name": "findUserById_NullId_ThrowsIllegalArgumentException"
+  },
+  {
+    "method": "saveUser",
+    "condition": "DuplicateEmail",
+    "expected": "ThrowsEmailAlreadyExistsException",
+    "test_name": "saveUser_DuplicateEmail_ThrowsEmailAlreadyExistsException"
+  }
+]
+
+## Test Implementation Patterns
+
+@implementation_patterns {
+  "basic_test_structure": "// Arrange\n[Setup test data and mocks]\n\n// Act\n[Execute method under test]\n\n// Assert\n[Verify results and interactions]",
+  "exception_testing": "// Arrange\n[Setup mocks to throw exception]\n\n// Act & Assert\nassertThatThrownBy(() -> methodUnderTest())\n    .isInstanceOf(ExpectedException.class)\n    .hasMessage(\"Expected message\");",
+  "interaction_verification": "// Arrange & Act\n[Execute test]\n\n// Assert\nverify(mockDependency).methodCall(expectedParameters);\nverify(mockDependency, times(1)).methodCall(any());"
+}
+
+## AssertJ Assertion Examples
+
+@assertj_patterns [
+  {
+    "type": "basic_assertions",
+    "examples": [
+      "assertThat(result).isNotNull()",
+      "assertThat(result).isEqualTo(expected)",
+      "assertThat(list).hasSize(3).contains(item1, item2)"
+    ]
+  },
+  {
+    "type": "exception_assertions",
+    "examples": [
+      "assertThatThrownBy(() -> method()).isInstanceOf(Exception.class)",
+      "assertThatThrownBy(() -> method()).hasMessage(\"error message\")",
+      "assertThatCode(() -> method()).doesNotThrowAnyException()"
+    ]
+  },
+  {
+    "type": "collection_assertions",
+    "examples": [
+      "assertThat(users).extracting(User::getName).containsExactly(\"John\", \"Jane\")",
+      "assertThat(results).filteredOn(result -> result.isActive()).hasSize(2)"
+    ]
+  }
+]
+
+## Comprehensive Test Examples
+
+@test_examples {
+  "task_test": "@ExtendWith(MockitoExtension.class)\nclass ArenaTaskTest {\n\n    @Mock\n    private EmulatorManager emuManager;\n    \n    @Mock\n    private Emulator emulator;\n    \n    @Mock\n    private DTOProfiles profile;\n    \n    @Mock\n    private NavigationHelper navigationHelper;\n    \n    @Mock\n    private StaminaHelper staminaHelper;\n    \n    private ArenaTask task;\n    \n    @BeforeEach\n    void setUp() {\n        when(profile.getEmulatorNumber()).thenReturn(\"0\");\n        when(emuManager.isRunning(\"0\")).thenReturn(true);\n        when(staminaHelper.hasEnoughStamina(20)).thenReturn(true);\n        task = new ArenaTask(profile, TpDailyTaskEnum.ARENA);\n        // Inject mocks via reflection or constructor if accessible\n    }\n    \n    @Test\n    void execute_EnoughStamina_CompletesSuccessfully() {\n        // Arrange\n        when(profile.getConfig(eq(EnumConfigurationKey.ARENA_TASK_BOOL), eq(Boolean.class)))\n            .thenReturn(true);\n        \n        // Act\n        task.execute();\n        \n        // Assert\n        verify(navigationHelper).navigateTo(\"ArenaScreen\");\n        verify(staminaHelper).hasEnoughStamina(20);\n    }\n    \n    @Test\n    void execute_InsufficientStamina_Reschedules() {\n        // Arrange\n        when(staminaHelper.hasEnoughStamina(20)).thenReturn(false);\n        \n        // Act\n        task.execute();\n        \n        // Assert\n        verify(staminaHelper).hasEnoughStamina(20);\n        // Verify rescheduling logic\n    }\n}",
+  "service_test": "@ExtendWith(MockitoExtension.class)\nclass ServProfilesTest {\n\n    @Mock\n    private IProfileRepository profileRepository;\n    \n    @Mock\n    private IConfigRepository configRepository;\n    \n    private ServProfiles service;\n    \n    @BeforeEach\n    void setUp() {\n        service = ServProfiles.getServices();\n        // Inject mocks\n    }\n    \n    @Test\n    void getProfiles_ReturnsAllProfiles() {\n        // Arrange\n        List<DTOProfiles> expectedProfiles = List.of(createTestProfile());\n        when(profileRepository.getProfiles()).thenReturn(expectedProfiles);\n        \n        // Act\n        List<DTOProfiles> result = service.getProfiles();\n        \n        // Assert\n        assertThat(result).isNotNull();\n        assertThat(result).hasSize(1);\n        verify(profileRepository).getProfiles();\n    }\n}",
+  "helper_test": "@ExtendWith(MockitoExtension.class)\nclass NavigationHelperTest {\n\n    @Mock\n    private EmulatorManager emuManager;\n    \n    @Mock\n    private Emulator emulator;\n    \n    @Mock\n    private DTOProfiles profile;\n    \n    private NavigationHelper helper;\n    \n    @Test\n    void navigateTo_ValidScreen_NavigatesSuccessfully() throws Exception {\n        // Arrange\n        when(profile.getEmulatorNumber()).thenReturn(\"0\");\n        when(emuManager.getEmulator(any(), any())).thenReturn(emulator);\n        helper = new NavigationHelper(emuManager, \"0\", profile);\n        \n        // Act\n        helper.navigateTo(\"AllianceScreen\");\n        \n        // Assert\n        verify(emulator).tap(eq(\"0\"), anyInt(), anyInt());\n    }\n}"
+}
+
+## Test Generation Requirements
+
+When generating unit tests:
+
+1. **Comprehensive Coverage**: Test all scenarios including valid inputs, invalid inputs, edge cases, boundary conditions, and exception scenarios (>80% coverage)
+2. **AAA Pattern**: Structure all tests with clear Arrange, Act, Assert sections
+3. **Proper Mocking**: Mock all dependencies (EmulatorManager, repositories, helpers, OCR providers) and verify interactions
+4. **AssertJ Usage**: Use AssertJ for all assertions instead of JUnit assertions
+5. **Naming Convention**: Follow [methodTested_ConditionTested_ExpectedResult] pattern
+6. **Exception Testing**: Test exception scenarios (ADBConnectionException, HomeNotFoundException, OCR failures)
+7. **Task Testing**: Test task execution, rescheduling logic, configuration access, helper usage
+8. **Service Testing**: Test singleton access patterns, service methods, thread safety considerations
+9. **Helper Testing**: Test helper methods with mocked dependencies, verify retry logic for OCR helpers
+10. **Emulator Testing**: Test emulator operations with mocked ddmlib, verify caching behavior
+11. **Repository Testing**: Test repository methods, HQL queries, use in-memory SQLite for integration tests
+12. **Module Boundaries**: Respect module dependencies, test within module boundaries

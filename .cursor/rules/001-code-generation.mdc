@@ -1,0 +1,326 @@
+---
+description: Code generation standards for WoS Bot - JavaFX desktop automation application
+globs: ["**/*.java", "**/*.fxml"]
+alwaysApply: true
+---
+# WoS Bot Development Standards
+
+@context {
+  "expertise_level": "senior_engineer",
+  "project_type": "JavaFX Desktop Automation Bot",
+  "framework_stack": ["JavaFX 23.0.1", "Hibernate ORM 7.0.8", "Maven", "Tess4j 5.14.0", "OpenCV 4.9.0", "ddmlib 31.11.1"],
+  "development_tools": ["Maven", "JUnit", "Mockito", "AssertJ", "SLF4J + Logback"],
+  "database_technologies": ["Hibernate ORM", "SQLite JDBC 3.42.0.0", "HikariCP 5.0.1"],
+  "architecture_patterns": ["Layered Architecture", "Multi-module Maven", "Repository Pattern", "Template Method Pattern", "Registry Pattern"],
+  "project_modules": ["wos-hmi (JavaFX GUI)", "wos-serv (Service Layer)", "wos-persitence (Data Layer)", "wos-utiles (Utilities)", "wos-ot (DTOs)"],
+  "documentation": "See agents/ directory for comprehensive project documentation",
+  "version": "2025.1.0"
+}
+
+## Core Development Principles
+
+@architectural_principles [
+  {
+    "principle": "SOLID",
+    "description": "Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion",
+    "enforcement": "mandatory"
+  },
+  {
+    "principle": "Clean Architecture",
+    "description": "Clear separation of concerns, domain-driven design, independence from frameworks",
+    "enforcement": "mandatory"
+  },
+  {
+    "principle": "DRY/KISS/YAGNI",
+    "description": "Don't Repeat Yourself, Keep It Simple Stupid, You Aren't Gonna Need It",
+    "enforcement": "mandatory"
+  },
+  {
+    "principle": "Five Lines Rule",
+    "description": "Methods should consist of as few lines as possible, preferably under 5 lines",
+    "enforcement": "recommended"
+  }
+]
+
+## WoS Bot Architecture Standards
+
+@project_conventions {
+  "module_organization": {
+    "wos-hmi": "JavaFX GUI, Controllers, FXML layouts",
+    "wos-serv": "Business logic, Tasks, Emulator management, Services",
+    "wos-persitence": "Hibernate entities, Repositories, Database access",
+    "wos-utiles": "OCR utilities, Image processing, Helper functions",
+    "wos-ot": "DTOs, Enums, Data transfer objects (no dependencies)"
+  },
+  "service_pattern": {
+    "singleton": "Use singleton pattern for services (ServScheduler, ServProfiles, ServLogs, EmulatorManager)",
+    "access": "Use getServices() or getInstance() static methods",
+    "description": "Services are singletons accessed via static factory methods"
+  },
+  "task_pattern": {
+    "base_class": "All tasks extend DelayedTask",
+    "registration": "Register in DelayedTaskRegistry",
+    "enum": "Add to TpDailyTaskEnum",
+    "config": "Add configuration keys to EnumConfigurationKey",
+    "helpers": "Use helper classes (NavigationHelper, StaminaHelper, etc.)"
+  },
+  "repository_pattern": {
+    "interface": "Define IProfileRepository, IConfigRepository interfaces",
+    "implementation": "Implement in ProfileRepository, ConfigRepository",
+    "access": "Use getRepository() static factory method",
+    "queries": "Use HQL for complex queries, entity methods for simple operations"
+  }
+}
+
+## Code Style and Structure
+
+@code_style_rules [
+  {
+    "rule": "naming_conventions",
+    "format": "camelCase for variables/methods, PascalCase for classes, UPPER_SNAKE_CASE for constants",
+    "standard": "Oracle Java naming conventions",
+    "examples": ["EMULATOR_NUMBER (constants)", "emulatorNumber (variables)", "EmulatorManager (classes)"]
+  },
+  {
+    "rule": "method_structure",
+    "pattern": "Early returns over nested conditionals",
+    "preference": "Functional and declarative programming patterns",
+    "task_pattern": "Tasks should use early returns for validation (stamina, emulator state, etc.)"
+  },
+  {
+    "rule": "package_organization",
+    "structure": "Group by feature/domain within modules",
+    "examples": ["cl.camodev.wosbot.serv.task.impl", "cl.camodev.wosbot.serv.task.helper", "cl.camodev.wosbot.emulator.impl"],
+    "interfaces": "Use interfaces for repositories and key services"
+  },
+  {
+    "rule": "design_patterns",
+    "usage": "Apply project patterns: Registry (DelayedTaskRegistry), Singleton (Services), Template Method (DelayedTask), Strategy (Emulators)",
+    "preference": "Follow existing patterns in codebase - check agents/04-task-system.md for task patterns"
+  },
+  {
+    "rule": "logging",
+    "pattern": "Use ProfileLogger for task logging, ServLogs for centralized logging",
+    "levels": "INFO for important events, DEBUG for detailed info, WARN for recoverable issues, ERROR for failures",
+    "format": "Profile name prefix: 'ProfileName - Message'"
+  }
+]
+
+## Documentation Standards
+
+@documentation_format {
+  "method_documentation": {
+    "required_sections": ["purpose", "parameters", "return_value", "exceptions"],
+    "format": "Javadoc with @param, @return, @throws tags",
+    "style": "Concise summaries with clear parameter descriptions",
+    "task_methods": "Document task execution flow, rescheduling logic, configuration usage"
+  },
+  "class_documentation": {
+    "requirements": ["purpose_summary", "usage_context", "key_responsibilities"],
+    "task_classes": "Document task type, configuration keys, helper usage, rescheduling strategy",
+    "helper_classes": "Document helper purpose, key methods, usage examples",
+    "output_format": "Javadoc format, reference agents/ documentation for detailed guides"
+  },
+  "project_documentation": {
+    "reference": "See agents/ directory for comprehensive project documentation",
+    "task_creation": "See agents/04-task-system.md and agents/05-development-guide.md",
+    "api_reference": "See agents/06-api-reference.md",
+    "configuration": "See agents/08-configuration-reference.md"
+  }
+}
+
+## Testing Standards
+
+@testing_principles {
+  "framework_stack": ["JUnit", "Mockito", "AssertJ"],
+  "naming_convention": "[methodTested_ConditionTested_ExpectedResult]",
+  "pattern": "Arrange-Act-Assert (AAA)",
+  "coverage_scenarios": [
+    "valid_inputs",
+    "invalid_inputs", 
+    "edge_cases",
+    "boundary_conditions",
+    "exception_handling",
+    "dependency_interactions"
+  ]
+}
+
+@testing_conventions [
+  {
+    "practice": "mock_dependencies",
+    "description": "Mock related dependencies to return different scenarios",
+    "verification": "Verify dependencies interaction"
+  },
+  {
+    "practice": "exception_testing",
+    "description": "Mock exceptions/errors and verify proper handling",
+    "assertion_library": "AssertJ for all assertions"
+  },
+  {
+    "practice": "comprehensive_coverage",
+    "description": "Test all scenarios including error conditions and edge cases"
+  }
+]
+
+## Security and Performance
+
+@security_standards [
+  {
+    "practice": "input_validation",
+    "requirement": "Validate all user inputs in GUI and configuration",
+    "database": "Use parameterized queries (Hibernate handles this)",
+    "secrets": "Never hardcode Discord tokens, store in configuration"
+  },
+  {
+    "practice": "data_protection",
+    "requirement": "Profile data stored locally in SQLite, consider encryption for sensitive data",
+    "emulator_access": "ADB requires local network security, no remote access"
+  }
+]
+
+@performance_optimization {
+  "emulator_operations": {
+    "screenshot_caching": "Cache last screenshot per emulator to avoid repeated captures",
+    "device_caching": "Cache ADB device instances with TTL (30s)",
+    "status_caching": "Cache emulator running status (5s TTL)"
+  },
+  "ocr_optimization": {
+    "region_precision": "Define precise OCR regions (smaller = better accuracy)",
+    "settings_reuse": "Reuse DTOTesseractSettings instances (CommonOCRSettings)",
+    "retry_logic": "Use TextRecognitionRetrier for automatic retries"
+  },
+  "database": {
+    "connection_pooling": "HikariCP handles connection pooling",
+    "query_optimization": "Use HQL for complex queries, avoid N+1 problems",
+    "batch_operations": "Batch configuration saves when possible"
+  },
+  "task_execution": {
+    "concurrency": "Each profile has own task queue thread",
+    "emulator_slots": "Limit concurrent emulators via MAX_RUNNING_EMULATORS_INT",
+    "idle_handling": "Send emulators to background when idle"
+  }
+}
+
+@java_memory_management {
+  "resource_management": {
+    "try_with_resources": "Use try-with-resources for all AutoCloseable objects",
+    "resource_cleanup": "Implement proper cleanup for streams, connections, and files",
+    "autocloseable_pattern": "Implement AutoCloseable for custom resources"
+  },
+  "jvm_optimization": {
+    "heap_management": "Understand Young/Old generation patterns, tune heap sizes appropriately",
+    "gc_algorithms": "Choose appropriate GC (G1, ZGC, Parallel) based on application needs",
+    "gc_monitoring": "Monitor GC performance and memory pressure",
+    "direct_memory": "Monitor off-heap memory usage, manage DirectByteBuffer allocation"
+  },
+  "object_lifecycle": {
+    "allocation_patterns": "Minimize object allocation in hot paths and loops",
+    "object_pooling": "Use object pooling for expensive objects when appropriate",
+    "reference_types": "Use WeakReference, SoftReference for caches and listeners",
+    "memory_leaks": "Avoid memory leaks from event listeners, static collections, ThreadLocal"
+  },
+  "collection_optimization": {
+    "appropriate_types": "Choose ArrayList vs LinkedList, HashSet vs TreeSet based on usage",
+    "initial_capacity": "Set initial capacity for ArrayList, HashMap when size is known",
+    "primitive_collections": "Use primitive collections (Eclipse Collections, Trove) for performance",
+    "concurrent_collections": "Use ConcurrentHashMap, CopyOnWriteArrayList for thread safety"
+  },
+  "string_optimization": {
+    "concatenation": "Use StringBuilder for multiple string concatenations",
+    "interning": "Be aware of string interning behavior and memory implications",
+    "text_blocks": "Use text blocks for multiline strings (Java 13+)",
+    "string_deduplication": "Enable string deduplication in supported JVMs"
+  },
+  "stream_efficiency": {
+    "parallel_streams": "Use parallel streams judiciously, consider overhead",
+    "memory_operations": "Avoid memory-intensive operations in stream pipelines",
+    "lazy_evaluation": "Leverage lazy evaluation, use limit() for infinite streams",
+    "collector_optimization": "Use appropriate collectors for optimal memory usage"
+  },
+  "spring_memory_patterns": {
+    "bean_scopes": "Understand singleton, prototype, request, session scopes",
+    "lifecycle_management": "Implement proper bean lifecycle callbacks",
+    "circular_dependencies": "Avoid circular dependencies that can cause memory issues",
+    "aspect_proxies": "Be aware of proxy creation overhead in AOP"
+  },
+  "concurrency_memory": {
+    "threadlocal_cleanup": "Always clean up ThreadLocal variables to prevent leaks",
+    "concurrent_access": "Use volatile, AtomicReference for thread-safe memory access",
+    "memory_barriers": "Understand happens-before relationships and memory visibility",
+    "lock_free_patterns": "Use lock-free data structures when appropriate"
+  }
+}
+
+## Error Handling
+
+@error_management {
+  "exception_types": "Use appropriate exception hierarchies with meaningful messages",
+  "logging": "Implement proper logging and monitoring",
+  "recovery": "Graceful degradation, retry policies, circuit breakers",
+  "consistency": "Preserve data consistency in error scenarios"
+}
+
+## API and Dependency Management
+
+@api_standards {
+  "design_principles": ["RESTful", "GraphQL where appropriate"],
+  "versioning": "Use API versioning for public interfaces",
+  "dependencies": "Minimize dependencies, prefer established secure libraries"
+}
+
+## Implementation Guidelines
+
+When generating code, ensure:
+
+1. **Complete Functionality**: Add all necessary imports, Maven dependencies, and module references
+2. **Production Ready**: Code follows project patterns and can be integrated immediately
+3. **JavaFX UI**: For GUI components, use FXML with proper controller binding, follow existing UI patterns
+4. **Task Pattern**: New tasks must extend DelayedTask, register in DelayedTaskRegistry, add to TpDailyTaskEnum
+5. **Configuration**: Add new config keys to EnumConfigurationKey with proper type and default value
+6. **Error Handling**: Always reschedule tasks on failure, use proper logging, handle ADB/OCR exceptions
+7. **Module Boundaries**: Respect module dependencies (wos-ot has no deps, wos-hmi depends on all)
+
+## Code Generation Rules
+
+@generation_rules [
+  {
+    "requirement": "imports_and_dependencies",
+    "description": "Include all necessary import statements, check module dependencies",
+    "maven": "Add dependencies to appropriate pom.xml if new libraries needed"
+  },
+  {
+    "requirement": "task_creation",
+    "description": "Follow task creation pattern: extend DelayedTask, register, add enum, add config keys",
+    "reference": "See agents/04-task-system.md and agents/05-development-guide.md"
+  },
+  {
+    "requirement": "helper_usage",
+    "description": "Use existing helper classes (NavigationHelper, StaminaHelper, etc.) instead of duplicating",
+    "reference": "See agents/09-helper-classes.md for available helpers"
+  },
+  {
+    "requirement": "logging",
+    "description": "Use ProfileLogger for tasks, log at appropriate levels (INFO/DEBUG/WARN/ERROR)",
+    "format": "Prefix messages with profile name: logInfo('ProfileName - Message')"
+  },
+  {
+    "requirement": "emulator_operations",
+    "description": "Use EmulatorManager.getInstance() to get emulator, handle ADB exceptions properly",
+    "caching": "Leverage screenshot/device caching, avoid repeated ADB calls"
+  },
+  {
+    "requirement": "ocr_operations",
+    "description": "Use TextRecognitionRetrier wrappers (integerHelper, durationHelper, stringHelper)",
+    "settings": "Use CommonOCRSettings for standard OCR configurations"
+  },
+  {
+    "requirement": "configuration_access",
+    "description": "Access config via profile.getConfig(EnumConfigurationKey, Type.class)",
+    "saving": "Set shouldUpdateConfig = true and save profile if configuration changed"
+  },
+  {
+    "requirement": "rescheduling",
+    "description": "Always reschedule tasks (even on failure), use appropriate delays",
+    "patterns": "See agents/04-task-system.md for rescheduling patterns"
+  }
+]
