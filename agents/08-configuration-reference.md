@@ -35,7 +35,7 @@ profile.setConfig(
 | `GAME_VERSION_STRING` | String | `"GLOBAL"` | Game version (GLOBAL, etc.) |
 | `MAX_RUNNING_EMULATORS_INT` | Integer | `1` | Maximum concurrent emulators |
 | `MAX_IDLE_TIME_INT` | Integer | `1` | Maximum idle time (minutes) |
-| `IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL` | Boolean | `false` | Send emulator to background when idle |
+| `IDLE_BEHAVIOR_STRING` | String | `"CLOSE_EMULATOR"` | Idle behavior: "CLOSE_EMULATOR", "SEND_TO_BACKGROUND", or "DO_NOTHING" |
 | `MUMU_PATH_STRING` | String | `""` | MuMu Player executable path |
 | `MEMU_PATH_STRING` | String | `""` | MEmu executable path |
 | `LDPLAYER_PATH_STRING` | String | `""` | LDPlayer executable path |
