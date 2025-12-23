@@ -10,4 +10,9 @@ public interface ButtonConstants {
     DTOArea LEFT_MENU_WILDERNESS_TAB = new DTOArea(new DTOPoint(280, 260), new DTOPoint(390, 280));
     DTOArea BOTTOM_MENU_ALLIANCE_BUTTON = new DTOArea(new DTOPoint(512, 1202), new DTOPoint(547, 1230));
 
+    // ========================================================================
+    // POLAR TERROR HUNTING BUTTON
+    // ========================================================================
+    DTOArea POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON = new DTOArea(new DTOPoint(50, 1040), new DTOPoint(85, 1066));
+    DTOArea POLAR_TERROR_HUNTING_LEVEL_INCREMENT_BUTTON = new DTOArea(new DTOPoint(50, 1040), new DTOPoint(85, 1066));
 }

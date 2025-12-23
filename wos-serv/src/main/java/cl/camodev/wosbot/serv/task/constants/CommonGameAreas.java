@@ -145,4 +145,11 @@ public interface CommonGameAreas {
         DTOArea TRAVEL_TIME_OCR_AREA = new DTOArea(
                         new DTOPoint(521, 1141),
                         new DTOPoint(608, 1162));
+        
+        // ========================================================================
+        // POLAR TERROR HUNTING
+        // ========================================================================
+        
+        /** OCR region for reading polar terror hunting level on deployment screen */
+        DTOArea POLAR_TERROR_HUNTING_LEVEL_DISPLAY_AREA = new DTOArea(new DTOPoint(78, 991), new DTOPoint(474, 1028));
 }
