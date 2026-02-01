@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import cl.camodev.utiles.UtilTime;
 import cl.camodev.wosbot.console.enumerable.EnumConfigurationKey;
 import cl.camodev.wosbot.console.enumerable.EnumTemplates;
+import cl.camodev.wosbot.console.enumerable.IdleBehavior;
 import cl.camodev.wosbot.console.enumerable.EnumTpMessageSeverity;
 import cl.camodev.wosbot.console.enumerable.TpDailyTaskEnum;
 import cl.camodev.wosbot.emulator.EmulatorManager;
@@ -386,21 +387,27 @@ public class TaskQueue {
 
     // Idle time management methods
     private void idlingEmulator(LocalDateTime delayUntil) {
-        boolean sendToBackground = Optional
+        // Get idle behavior from configuration (defaults to CLOSE_EMULATOR if not set)
+        String idleBehaviorConfig = Optional
                 .ofNullable(ServConfig.getServices().getGlobalConfig())
                 .map(cfg -> cfg.getOrDefault(
-                        EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.name(),
-                        EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()))
-                .map(Boolean::parseBoolean)
-                .orElse(Boolean
-                        .parseBoolean(EnumConfigurationKey.IDLE_BEHAVIOR_SEND_TO_BACKGROUND_BOOL.getDefaultValue()));
+                        EnumConfigurationKey.IDLE_BEHAVIOR_STRING.name(),
+                        EnumConfigurationKey.IDLE_BEHAVIOR_STRING.getDefaultValue()))
+                .orElse(EnumConfigurationKey.IDLE_BEHAVIOR_STRING.getDefaultValue());
 
-        if (sendToBackground) {
+        // Convert to IdleBehavior enum (defaults to CLOSE_EMULATOR if invalid)
+        IdleBehavior behavior = IdleBehavior.fromString(idleBehaviorConfig);
+
+        if (behavior == IdleBehavior.DO_NOTHING) {
+            // Do nothing - leave emulator and game running, but release slot
+            emuManager.releaseEmulatorSlot(profile);
+            logInfo("Leaving emulator and game running due to idle. Next task: " + delayUntil);
+        } else if (behavior == IdleBehavior.SEND_TO_BACKGROUND) {
             // Send game to background (home screen), keep emulator and game running
             emuManager.sendGameToBackground(profile.getEmulatorNumber());
             logInfo("Sending game to background due to large inactivity. Next task: " + delayUntil);
         } else {
-            // Close the entire emulator (original behavior)
+            // Close the entire emulator (default behavior)
             emuManager.closeEmulator(profile.getEmulatorNumber());
             logInfo("Closing emulator due to large inactivity. Next task: " + delayUntil);
             emuManager.releaseEmulatorSlot(profile);
