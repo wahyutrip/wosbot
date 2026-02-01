@@ -14,6 +14,9 @@ import cl.camodev.wosbot.serv.impl.ServTaskManager;
 import cl.camodev.wosbot.serv.task.DelayedTask;
 import cl.camodev.wosbot.serv.task.EnumStartLocation;
 import cl.camodev.wosbot.serv.task.constants.SearchConfigConstants;
+import cl.camodev.wosbot.serv.task.constants.CommonGameAreas;
+import cl.camodev.wosbot.serv.task.constants.ButtonConstants;
+import cl.camodev.wosbot.serv.task.constants.CommonOCRSettings;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -314,6 +317,8 @@ public class PolarTerrorHuntingTask extends DelayedTask {
             return false;
         }
 
+
+        @SuppressWarnings("unused")
         DTOPoint[] levelPoints = {
                 new DTOPoint(129, 1052), // Level 1
                 new DTOPoint(173, 1052), // Level 2
@@ -329,12 +334,12 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         sleepTask(100);
         if (polarLevel != -1) {
             logInfo(String.format("Adjusting Polar Terror level to %d", polarLevel));
-            if (polarLevel < 1 || polarLevel > levelPoints.length) {
+            if (!setPolarTerrorLevel(polarLevel)) {
                 logError(String.format("Invalid Polar Terror level configured: %d. Must be between 1 and %d.",
                         polarLevel, MAX_POLAR_LEVEL));
                 return false;
             }
-            tapRandomPoint(levelPoints[polarLevel - 1], levelPoints[polarLevel - 1], 3, 100);
+            // tapRandomPoint(levelPoints[polarLevel - 1], levelPoints[polarLevel - 1], 3, 100);
         }
         // tap on search button
         logDebug("Tapping on search button...");
@@ -342,6 +347,168 @@ public class PolarTerrorHuntingTask extends DelayedTask {
         sleepTask(1500);
         return true;
     }
+
+    private boolean setPolarTerrorLevel(int desiredLevel) {
+        logInfo(String.format("Setting Polar Terror level to %d", desiredLevel));
+
+        if (desiredLevel < 1 || desiredLevel > MAX_POLAR_LEVEL) {
+            logError(String.format("Invalid Polar Terror level configured: %d. Must be between 1 and %d.",
+                    desiredLevel, MAX_POLAR_LEVEL));
+            return false;
+        }
+
+        // Read current level using OCR
+        Integer currentLevel = readCurrentPolarTerrorLevel();
+
+        if (currentLevel != null && currentLevel == desiredLevel) {
+            logInfo("Desired level already selected");
+            return true;
+        }
+
+        if (currentLevel == null) {
+            // OCR failed, use backup plan: search backward from highest available level
+            logDebug("OCR failed, using backup level selection (backward search)");
+            return setPolarTerrorLevelBackward(desiredLevel);
+        } else {
+            // OCR succeeded, adjust from current level
+            logDebug(String.format("Current level: %d, adjusting to %d", currentLevel, desiredLevel));
+
+            if (currentLevel > desiredLevel) {
+                // Need to decrease level - use decrement button
+                int taps = currentLevel - desiredLevel;
+		tapRandomPoint(ButtonConstants.POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON.topLeft(), ButtonConstants.POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON.bottomRight(), taps,
+                        150);
+                sleepTask(300); // Wait for UI to update
+
+                // Verify the level was set correctly
+                Integer newLevel = readCurrentPolarTerrorLevel();
+                if (newLevel != null && newLevel == desiredLevel) {
+                    logInfo("Level successfully set to " + desiredLevel);
+                    return true;
+                } else {
+                    logWarning("Level verification failed after decrement. Using backward search fallback.");
+                    return setPolarTerrorLevelBackward(desiredLevel);
+                }
+            } else {
+                // Current level is lower than desired - this shouldn't happen often,
+                // but we'll search backward from max level anyway to be safe
+                logDebug("Current level is lower than desired. Using backward search.");
+                return setPolarTerrorLevelBackward(desiredLevel);
+            }
+        }
+    }
+
+    private boolean setPolarTerrorLevelBackward(int desiredLevel) {
+        logDebug("Starting backward search from level " + MAX_POLAR_LEVEL);
+
+        if (desiredLevel > MAX_POLAR_LEVEL) {
+            logError("Desired level " + desiredLevel + " exceeds maximum level " + MAX_POLAR_LEVEL);
+            return false;
+        }
+
+        // Try reading level a few times to see if OCR works now
+        Integer currentDetectedLevel = null;
+        for (int i = 0; i < 3; i++) {
+            currentDetectedLevel = readCurrentPolarTerrorLevel();
+            if (currentDetectedLevel != null) {
+                break;
+            }
+            sleepTask(200);
+        }
+
+        if (currentDetectedLevel != null) {
+            // OCR is working now, adjust from current level
+            if (currentDetectedLevel == desiredLevel) {
+                logInfo("Desired level already set (detected via OCR)");
+                return true;
+            }
+
+            if (currentDetectedLevel > desiredLevel) {
+                // Decrement from current level
+                int taps = currentDetectedLevel - desiredLevel;
+		tapRandomPoint(ButtonConstants.POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON.topLeft(), ButtonConstants.POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON.bottomRight(), taps,
+                        150);
+                sleepTask(300);
+
+                Integer finalLevel = readCurrentPolarTerrorLevel();
+                if (finalLevel != null && finalLevel == desiredLevel) {
+                    logInfo("Successfully set level to " + desiredLevel + " via backward search");
+                    return true;
+                }
+            } else {
+                // Current level is lower than desired - need to go up first
+                // Since we're doing backward search, we'll try to get to level 8 first
+                // by incrementing, but we don't have increment button coordinates
+                // So we'll try decrementing from level 8 assumption
+                logDebug("Current level is lower than desired. Attempting to reach level 8 first.");
+            }
+        }
+
+        // OCR still not working or current level is too low - use fallback:
+        // Start from level 8 and decrement down, checking OCR after each step
+        int decrementCount = 0;
+        int maxDecrements = MAX_POLAR_LEVEL - 1; // Maximum number of decrements needed (from 8 to 1)
+
+        while (decrementCount <= maxDecrements) {
+            // Check current level via OCR
+            Integer detectedLevel = readCurrentPolarTerrorLevel();
+
+            if (detectedLevel != null) {
+                if (detectedLevel == desiredLevel) {
+                    logInfo("Successfully set level to " + desiredLevel + " via backward search");
+                    return true;
+                }
+
+                if (detectedLevel < desiredLevel) {
+                    // We've gone too far down
+                    logWarning("Level went below desired level during backward search");
+                    break;
+                }
+
+                // Still above desired level, continue decrementing
+                if (detectedLevel > desiredLevel) {
+                    int taps = detectedLevel - desiredLevel;
+		tapRandomPoint(ButtonConstants.POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON.topLeft(), ButtonConstants.POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON.bottomRight(),
+                            taps, 150);
+                    sleepTask(300);
+
+                    Integer finalLevel = readCurrentPolarTerrorLevel();
+                    if (finalLevel != null && finalLevel == desiredLevel) {
+                        logInfo("Successfully set level to " + desiredLevel + " via backward search");
+                        return true;
+                    }
+                    break; // OCR is working, we should have succeeded
+                }
+            }
+
+            // OCR not working, try decrementing once and check again
+            if (decrementCount < maxDecrements) {
+		tapRandomPoint(ButtonConstants.POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON.topLeft(), ButtonConstants.POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON.bottomRight(), 1,
+                        150);
+                sleepTask(300);
+                decrementCount++;
+            } else {
+                break;
+            }
+        }
+
+        logError("Failed to set Polar Terror level to " + desiredLevel + " via backward search");
+        return false;
+    }
+
+    private Integer readCurrentPolarTerrorLevel() {
+        Integer level = readNumberValue(CommonGameAreas.POLAR_TERROR_HUNTING_LEVEL_DISPLAY_AREA.topLeft(), CommonGameAreas.POLAR_TERROR_HUNTING_LEVEL_DISPLAY_AREA.bottomRight(), CommonOCRSettings.POLAR_TERROR_HUNTING_LEVEL_SETTINGS);
+
+        if (level != null) {
+            logDebug("Current Polar Terror level detected: " + level);
+        } else {
+            logWarning("Failed to read current Polar Terror level via OCR");
+        }
+
+        return level;
+    }
+
+    
 
     private boolean polarsRemaining(int polarLevel) {
         if (!openPolarsMenu(polarLevel)) {

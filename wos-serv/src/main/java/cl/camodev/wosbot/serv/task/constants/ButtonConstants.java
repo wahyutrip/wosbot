@@ -18,4 +18,9 @@ public interface ButtonConstants {
     DTOArea CHIEF_ORDER_RUSH_JOB_BUTTON = new DTOArea(new DTOPoint(440, 270), new DTOPoint(540, 390));
     DTOArea CHIEF_ORDER_PRODUCTIVITY_DAY_BUTTON = new DTOArea(new DTOPoint(150, 910), new DTOPoint(250, 1030));
 
+    // ========================================================================
+    // POLAR TERROR HUNTING BUTTON
+    // ========================================================================
+    DTOArea POLAR_TERROR_HUNTING_LEVEL_DECREMENT_BUTTON = new DTOArea(new DTOPoint(50, 1040), new DTOPoint(85, 1066));
+    DTOArea POLAR_TERROR_HUNTING_LEVEL_INCREMENT_BUTTON = new DTOArea(new DTOPoint(50, 1040), new DTOPoint(85, 1066));
 }

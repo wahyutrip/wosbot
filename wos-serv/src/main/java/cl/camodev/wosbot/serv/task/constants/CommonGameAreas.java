@@ -198,4 +198,11 @@ public interface CommonGameAreas {
         DTOArea CHIEF_ORDER_DETAIL_ACTIVE_OCR_AREA = new DTOArea(new DTOPoint(355, 910), new DTOPoint(467, 947));
         /** OCR region for reading Chief Order cooldown time in detail screen */
         DTOArea CHIEF_ORDER_DETAIL_COOLDOWN_OCR_AREA = new DTOArea(new DTOPoint(395, 910), new DTOPoint(512, 947));
+
+        // ========================================================================
+        // POLAR TERROR HUNTING
+        // ========================================================================
+
+        /** OCR region for reading polar terror hunting level on deployment screen */
+        DTOArea POLAR_TERROR_HUNTING_LEVEL_DISPLAY_AREA = new DTOArea(new DTOPoint(78, 991), new DTOPoint(474, 1028));
 }

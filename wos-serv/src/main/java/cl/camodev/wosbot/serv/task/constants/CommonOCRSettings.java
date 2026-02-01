@@ -101,4 +101,27 @@ public interface CommonOCRSettings {
          * Example matches: "45", "Score: 1234", "Level 99"
          */
         Pattern NUMBER_PATTERN = Pattern.compile(".*?(\\d+).*");
+
+        // ========================================================================
+        // POLAR TERROR HUNTING OCR SETTINGS
+        // ========================================================================
+
+        /**
+         * OCR settings for reading polar terror hunting level.
+         * 
+         * <p>
+         * Configuration:
+         * <ul>
+         * <li>Allowed characters: 12345678</li>
+         * <li>Numbers only</li>
+         * <li>Background removal enabled</li>
+         * <li>LSTM engine</li>
+         * </ul>
+         */
+        DTOTesseractSettings POLAR_TERROR_HUNTING_LEVEL_SETTINGS = DTOTesseractSettings.builder()
+                        .setPageSegMode(DTOTesseractSettings.PageSegMode.SINGLE_LINE)
+                        .setOcrEngineMode(DTOTesseractSettings.OcrEngineMode.LSTM)
+                        .setRemoveBackground(true)
+                        .setAllowedChars("12345678")
+                        .build();
 }
