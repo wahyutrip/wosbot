@@ -165,13 +165,13 @@ public interface CommonGameAreas {
         DTOArea PROFILE_SETTINGS_SWITCH_CHARACTER_CHARACTER_LIST_AREA = new DTOArea(new DTOPoint(60, 380), new DTOPoint(660, 1100));
         /** Profile settings switch character prompt button area */
         DTOArea PROFILE_SETTINGS_SWITCH_CHARACTER_PROMPT_BUTTON_AREA = new DTOArea(new DTOPoint(50, 750), new DTOPoint(670, 850));
-        
+
         /** OCR region for reading character name in character switch confirmation dialog */
         DTOArea PROFILE_SETTINGS_SWITCH_CHARACTER_CONFIRM_DIALOG_NAME_OCR_AREA = new DTOArea(
                 new DTOPoint(170, 650),
                 new DTOPoint(550, 700));
 
-        /** 
+        /**
          * OCR region for reading character name above Furnace Level template in character list.
          * Character name is positioned relative to furnace level template:
          * - Vertical: Character name Y position is 35 pixels above furnace template (furnace Y - 35)
@@ -182,4 +182,20 @@ public interface CommonGameAreas {
         int CHARACTER_NAME_ABOVE_FURNACE_BOTTOM_OFFSET_Y = 10;  // Pixels above Furnace Level template for bottom of character name OCR region
         int CHARACTER_NAME_ABOVE_FURNACE_X_START = 210;  // Fixed X start position for character name OCR
         int CHARACTER_NAME_ABOVE_FURNACE_X_END = 500;  // Fixed X end position for character name OCR
+
+        // ========================================================================
+        // CHIEF ORDER AREAS
+        // ========================================================================
+
+        /** OCR region for reading Chief Order cooldown time in main menu (urgent mobilization) */
+        DTOArea CHIEF_ORDER_URGENT_MOBILIZATION_MAIN_COOLDOWN_OCR_AREA = new DTOArea(new DTOPoint(160, 332), new DTOPoint(262, 357));
+        /** OCR region for reading Chief Order cooldown time in main menu (rush job) */
+        DTOArea CHIEF_ORDER_RUSH_JOB_MAIN_COOLDOWN_OCR_AREA = new DTOArea(new DTOPoint(435, 332), new DTOPoint(542, 357));
+        /** OCR region for reading Chief Order cooldown time in main menu (productivity day) */
+        DTOArea CHIEF_ORDER_PRODUCTIVITY_DAY_MAIN_COOLDOWN_OCR_AREA = new DTOArea(new DTOPoint(160, 977), new DTOPoint(262, 1002));
+
+        /** OCR region for reading Chief Order active time in detail screen */
+        DTOArea CHIEF_ORDER_DETAIL_ACTIVE_OCR_AREA = new DTOArea(new DTOPoint(355, 910), new DTOPoint(467, 947));
+        /** OCR region for reading Chief Order cooldown time in detail screen */
+        DTOArea CHIEF_ORDER_DETAIL_COOLDOWN_OCR_AREA = new DTOArea(new DTOPoint(395, 910), new DTOPoint(512, 947));
 }

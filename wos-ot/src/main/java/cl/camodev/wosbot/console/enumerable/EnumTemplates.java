@@ -450,12 +450,14 @@ public enum EnumTemplates {
     // ========================================================================
     // CHIEF ORDER
     // ========================================================================
-	CHIEF_ORDER_MENU_BUTTON("/templates/chieforder/chiefOrderMenuButton.png"),
-	CHIEF_ORDER_RUSH_JOB("/templates/chieforder/chiefOrderRushJob.png"),
-	CHIEF_ORDER_URGENT_MOBILISATION("/templates/chieforder/chiefOrderUrgentMobilisation.png"),
-	CHIEF_ORDER_PRODUCTIVITY_DAY("/templates/chieforder/chiefOrderProductivityDay.png"),
-	CHIEF_ORDER_ENACT_BUTTON("/templates/chieforder/chiefOrderEnactButton.png"),
-	
+    CHIEF_ORDER_MENU_BUTTON("/templates/chieforder/chiefOrderMenuButton.png"),
+    CHIEF_ORDER_RUSH_JOB("/templates/chieforder/chiefOrderRushJob.png"),
+    CHIEF_ORDER_URGENT_MOBILISATION("/templates/chieforder/chiefOrderUrgentMobilisation.png"),
+    CHIEF_ORDER_PRODUCTIVITY_DAY("/templates/chieforder/chiefOrderProductivityDay.png"),
+    CHIEF_ORDER_DETAIL_ACTIVE("/templates/chieforder/chiefOrderActive.png"),
+    CHIEF_ORDER_DETAIL_COOLDOWN("/templates/chieforder/chiefOrderCooldown.png"),
+    CHIEF_ORDER_ENACT_BUTTON("/templates/chieforder/chiefOrderEnactButton.png"),
+
     // ========================================================================
     // CHARACTER PROFILE AND SETTINGS
     // ========================================================================
